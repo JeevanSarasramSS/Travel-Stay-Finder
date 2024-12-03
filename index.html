@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Finder</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff9a8b 0%, #ff6f61 50%, #f4c4f3 100%);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #ff4757;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="submit"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 1rem;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #ff6f61;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+
+        input[type="submit"] {
+            background-color: #ff6f61;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #ff4757;
+        }
+
+        #results {
+            margin-top: 20px;
+        }
+
+        .result {
+            border: 2px solid #ff6f61;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            background-color: #fff5f5;
+        }
+
+        .result strong {
+            font-size: 1.2rem;
+            color: #ff4757;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Find Hotels Near You</h1>
+        <form id="locationForm">
+            <label for="location">Enter a location:</label>
+            <input type="text" id="location" name="location" placeholder="City, Address..." required>
+            <input type="submit" value="Search">
+        </form>
+        <div id="results"></div>
+    </div>
+
+    <footer>
+        &copy; 2024 Hotel Finder
+    </footer>
+
+    <script>
+        document.getElementById('locationForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            let location = document.getElementById('location').value;
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    let user_lat = position.coords.latitude;
+                    let user_lon = position.coords.longitude;
+
+                    fetch(`/search?location=${encodeURIComponent(location)}&user_lat=${user_lat}&user_lon=${user_lon}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            let resultsDiv = document.getElementById('results');
+                            resultsDiv.innerHTML = '';  
+
+                            if (data.hotels && data.hotels.length > 0) {
+                                let hotelList = '<h2>Nearby Hotels:</h2>';
+                                data.hotels.forEach(hotel => {
+                                    hotelList += `<div class="result">
+                                                    <strong>${hotel.name}</strong><br>
+                                                    Address: ${hotel.address}<br>
+                                                    Distance: ${hotel.distance} km
+                                                  </div>`;
+                                });
+                                resultsDiv.innerHTML = hotelList;
+                            } else {
+                                resultsDiv.innerHTML = "<p>No nearby hotels found.</p>";
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching hotels:', error);
+                            document.getElementById('results').innerHTML = "<p>Error fetching hotels.</p>";
+                        });
+                });
+            } else {
+                alert('Geolocation is not supported by your browser.');
+            }
+        });
+    </script>
+</body>
+</html
